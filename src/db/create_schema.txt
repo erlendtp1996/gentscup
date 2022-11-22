@@ -1,0 +1,37 @@
+DROP TABLE IF EXISTS cup;
+DROP TABLE IF EXISTS player;
+DROP TABLE IF EXISTS cupTeam;
+DROP TABLE IF EXISTS cupTeamMember;
+DROP TABLE IF EXISTS cupMatch;
+
+CREATE TABLE cup (
+    cupId serial PRIMARY KEY,
+    year text
+);
+
+CREATE TABLE player (
+    playerId serial PRIMARY KEY, 
+    name text, 
+    handicap integer, 
+    personal_info text, 
+    role text
+);
+
+CREATE TABLE cupTeam(
+    cupTeamId serial PRIMARY KEY,
+    cupId integer REFERENCES cup,
+    name text,
+    captainPlayerId integer REFERENCES player,
+    numberOfBullets integer
+);
+
+CREATE TABLE cupTeamMember( 
+    cupTeamMemberId serial PRIMARY KEY,
+    cupTeamId integer REFERENCES cupTeam,
+    numberOfBullets integer
+);
+
+CREATE TABLE cupMatch(
+    cupMatchId serial PRIMARY KEY,
+    cupId integer REFERENCES cup
+);

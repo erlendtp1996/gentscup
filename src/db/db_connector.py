@@ -1,6 +1,17 @@
 import psycopg2
 import os
 
+def create_schema(): 
+    File_object = open("src/db/create_schema.txt", "r")
+    operation = File_object.read()
+    File_object.close()
+    conn = psycopg2.connect(dbname=os.environ["DB_NAME"], user=os.environ["DB_USER"], password=os.environ["DB_PASSWORD"], host=os.environ["DB_HOST"])
+    cur = conn.cursor()
+    cur.execute(operation)
+    conn.commit()
+    cur.close()
+    conn.close()
+    print("Done")
 
 def get_users():
     # Connect to an existing database

@@ -1,6 +1,32 @@
 import psycopg2
 import os
 
+def get_connection():
+    return psycopg2.connect(dbname=os.environ["DB_NAME"], user=os.environ["DB_USER"], password=os.environ["DB_PASSWORD"], host=os.environ["DB_HOST"])
+
+def insert(command, with_return):
+    record = None
+    connection = get_connection()
+    cur = connection.cursor()
+    cur.execute(command)
+    if with_return:
+        record = cur.fetchone()
+    connection.commit()
+    cur.close()
+    connection.close()
+    return record
+
+def fetch_all(command):
+    connection = get_connection()
+    cur = connection.cursor()
+    cur.execute(command)
+    record = cur.fetchall()
+    connection.commit()
+    cur.close()
+    connection.close()
+    return record
+
+# WILL DROP & RE-CREATE TABLES
 def create_schema(): 
     File_object = open("src/db/create_schema.txt", "r")
     operation = File_object.read()
@@ -12,6 +38,10 @@ def create_schema():
     cur.close()
     conn.close()
     print("Done")
+
+"""
+
+FOR FUTURE REFERECE - NEED TO CLEAN UP
 
 def get_users():
     # Connect to an existing database
@@ -38,3 +68,4 @@ def get_users():
     cur.close()
     conn.close()
     return player
+"""

@@ -1,8 +1,10 @@
 from flask import Flask, request, redirect, url_for, make_response, jsonify
 from flask_awscognito import AWSCognitoAuthentication
 from common.env import read_env_vars
-from db.db_connector import get_users
+from model.cup import create_cup_entry
+
 import os
+import json
 
 read_env_vars()
 
@@ -16,8 +18,6 @@ app.config['AWS_COGNITO_USER_POOL_CLIENT_SECRET'] = os.environ["AWS_COGNITO_USER
 app.config['AWS_COGNITO_REDIRECT_URL'] = os.environ["AWS_COGNITO_REDIRECT_URL"]
 
 aws_auth = AWSCognitoAuthentication(app)
-
-read_env_vars()
 
 @app.route('/')
 @aws_auth.authentication_required
@@ -34,12 +34,19 @@ def aws_cognito_redirect():
     access_token = aws_auth.get_access_token(request.args)
     return jsonify({'access_token': access_token})
 
-@app.route('/secret')
-@aws_auth.authentication_required
-def authenticated_endpoint(): 
-    return jsonify({'testing': 'hello, there'})
-
 @app.route('/users')
 @aws_auth.authentication_required
 def list_users():
-    return jsonify({'users': get_users()})
+    return None
+    #return jsonify({'users': get_users()})
+
+@app.route('/cup', methods=['POST'])
+@aws_auth.authentication_required
+def create_cup():
+    response = None
+    try:
+        response = create_cup_entry(**request.json)
+        response = jsonify(response)
+    except:
+        response = "Bad request", 400
+    return response

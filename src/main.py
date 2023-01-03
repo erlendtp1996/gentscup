@@ -1,14 +1,15 @@
-from flask import Flask, request, redirect, url_for, make_response, jsonify
+from flask import Flask, request, redirect, jsonify, send_file
 from flask_awscognito import AWSCognitoAuthentication
 from common.env import read_env_vars
 from model.cup import create_cup_entry
+from model.users import list_application_users
 
 import os
 import json
 
 read_env_vars()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='./web/gentscup-spa/build', static_url_path='/')
 
 app.config['AWS_DEFAULT_REGION'] = os.environ["AWS_DEFAULT_REGION"]
 app.config['AWS_COGNITO_DOMAIN'] = os.environ["AWS_COGNITO_DOMAIN"]
@@ -20,27 +21,33 @@ app.config['AWS_COGNITO_REDIRECT_URL'] = os.environ["AWS_COGNITO_REDIRECT_URL"]
 aws_auth = AWSCognitoAuthentication(app)
 
 @app.route('/')
-@aws_auth.authentication_required
 def index():
-    claims = aws_auth.claims # or g.cognito_claims
-    return jsonify({'claims': claims})
+    return app.send_static_file('index.html')
 
-@app.route("/sign_in")
+@app.route("/api/sign_in")
 def sign_in():
     return redirect(aws_auth.get_sign_in_url())
 
-@app.route('/aws_cognito_redirect')
+@app.route('/api/token', methods=["POST"])
 def aws_cognito_redirect():
-    access_token = aws_auth.get_access_token(request.args)
+    print ("here")
+    access_token = aws_auth.get_access_token(request.json)
     return jsonify({'access_token': access_token})
 
-@app.route('/users')
+#Authenticated Endpoints
+@app.route("/api/me", methods=["GET"])
+@aws_auth.authentication_required
+def me():
+    claims = aws_auth.claims
+    return jsonify({'claims': claims})
+
+@app.route('/api/users', methods=["GET"])
 @aws_auth.authentication_required
 def list_users():
-    return None
-    #return jsonify({'users': get_users()})
+    users = list_application_users()
+    return jsonify(users)
 
-@app.route('/cup', methods=['POST'])
+@app.route('/api/cup', methods=['POST'])
 @aws_auth.authentication_required
 def create_cup():
     response = None

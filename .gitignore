@@ -130,3 +130,25 @@ dmypy.json
 
 # Certificates
 *.pem
+
+# dependencies
+src/web/gentscup-spa/node_modules
+src/web/gentscup-spa/.pnp
+src/web/gentscup-spa.pnp.js
+
+# testing
+src/web/gentscup-spa/coverage
+
+# production
+src/web/gentscup-spa/build
+
+# misc
+src/web/gentscup-spa/.DS_Store
+src/web/gentscup-spa/.env.local
+src/web/gentscup-spa/.env.development.local
+src/web/gentscup-spa/.env.test.local
+src/web/gentscup-spa/.env.production.local
+
+src/web/gentscup-spa/npm-debug.log*
+src/web/gentscup-spa/yarn-debug.log*
+src/web/gentscup-spa/yarn-error.log*

@@ -9,24 +9,18 @@ CREATE TABLE cup (
     year text
 );
 
-CREATE TABLE player (
-    playerId serial PRIMARY KEY, 
-    name text, 
-    handicap integer, 
-    personal_info text, 
-    role text
-);
-
 CREATE TABLE cupTeam(
     cupTeamId serial PRIMARY KEY,
     cupId integer REFERENCES cup,
     name text,
-    captainPlayerId integer REFERENCES player,
+    captainUserId text,
     numberOfBullets integer
 );
 
 CREATE TABLE cupTeamMember( 
     cupTeamMemberId serial PRIMARY KEY,
+    userId text,
+    userName text,
     cupTeamId integer REFERENCES cupTeam,
     numberOfBullets integer
 );

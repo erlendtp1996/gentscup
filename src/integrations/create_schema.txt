@@ -15,16 +15,18 @@ CREATE TABLE cupTeam(
     cupTeamId serial PRIMARY KEY,
     cupId integer REFERENCES cup,
     name text,
-    captainUserId text,
-    numberOfBullets integer
+    captainUser text,
+    captainEmail text,
+    teamNumberOfBullets integer
 );
 
 CREATE TABLE cupTeamMember( 
     cupTeamMemberId serial PRIMARY KEY,
-    userId text,
     userName text,
+    userEmail text,
     cupTeamId integer REFERENCES cupTeam,
-    numberOfBullets integer
+    individualNumberOfBullets integer,
+    isCaptain boolean
 );
 
 CREATE TABLE cupMatch(

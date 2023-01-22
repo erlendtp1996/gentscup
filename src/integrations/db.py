@@ -9,7 +9,7 @@ class Database:
     def query(self, query):
         self.cur.execute(query)
 
-    def insert(self, command, values, with_return):
+    def insert(self, command, values=None, with_return=False):
         record = None
         self.cur.execute(command, values)
         if with_return:
@@ -17,9 +17,15 @@ class Database:
         self.conn.commit()
         return record
     
-    def fetch_all(self, command, values):
+    def fetch_all(self, command, values=None):
         self.cur.execute(command, values)
         record = self.cur.fetchall()
+        self.conn.commit()
+        return record
+
+    def fetch_one(self, command, values=None):
+        self.cur.execute(command, values)
+        record = self.cur.fetchone()
         self.conn.commit()
         return record
 

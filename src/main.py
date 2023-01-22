@@ -1,6 +1,7 @@
 from flask import Flask, request, redirect, jsonify, send_file, session, abort
 from common.env import read_env_vars
-from model.cup import Cup, create_cup_entry, list_cups
+from model.cup import Cup, create_cup_entry, list_cups, get_single_cup
+from model.cupTeam import CupTeam, create_cup_team_entry
 from model.users import list_application_users
 from integrations.db import Database
 
@@ -67,6 +68,10 @@ def list_users():
     users = list_application_users()
     return jsonify(users)
 
+
+
+
+
 #Cup Table Endpoints
 @app.route('/api/cup', methods=['POST'])
 def create_cup():
@@ -74,17 +79,33 @@ def create_cup():
     if not gentsCup.isValidForInsert():
         abort(400)
     db = Database()
-    response = create_cup_entry(gentsCup, db)
+    create_cup_entry(gentsCup, db)
     db.close()
     return jsonify(gentsCup)
 
+@app.route('/api/cup/<cupId>', methods=['GET'])
+def get_cup(cupId):
+    gentsCup = Cup(id=cupId)
+    db = Database()
+    gentsCup = get_single_cup(gentsCup, db)
+    db.close()
+    return jsonify(gentsCup)
 
 @app.route('/api/cups', methods=['GET'])
 def get_cups():
-    response = None
-    try:
-        response = list_cups()
-        response = jsonify(response)
-    except:
-        response = "Error processing request", 500
-    return response
+    return jsonify(list_cups(Database()))
+
+
+
+
+#Cup Team
+@app.route('/api/cup/<cupId>/cupTeam', methods=['POST'])
+def create_cup_team(cupId):
+    gentsCupTeam = CupTeam(cupId=cupId, **request.json)
+    if not gentsCupTeam.isValidForInsert():
+        abort(400)
+    db = Database()
+    create_cup_team_entry(gentsCupTeam, db)
+    db.close()
+    return jsonify(gentsCupTeam)
+

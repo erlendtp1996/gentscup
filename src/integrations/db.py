@@ -1,30 +1,31 @@
 import psycopg2
 import os
 
-def get_connection():
-    return psycopg2.connect(dbname=os.environ["DB_NAME"], user=os.environ["DB_USER"], password=os.environ["DB_PASSWORD"], host=os.environ["DB_HOST"])
+class Database:
+    def __init__(self):
+        self.conn = psycopg2.connect(dbname=os.environ["DB_NAME"], user=os.environ["DB_USER"], password=os.environ["DB_PASSWORD"], host=os.environ["DB_HOST"])
+        self.cur = self.conn.cursor()
 
-def insert(command, with_return):
-    record = None
-    connection = get_connection()
-    cur = connection.cursor()
-    cur.execute(command)
-    if with_return:
-        record = cur.fetchone()
-    connection.commit()
-    cur.close()
-    connection.close()
-    return record
+    def query(self, query):
+        self.cur.execute(query)
 
-def fetch_all(command):
-    connection = get_connection()
-    cur = connection.cursor()
-    cur.execute(command)
-    record = cur.fetchall()
-    connection.commit()
-    cur.close()
-    connection.close()
-    return record
+    def insert(self, command, values, with_return):
+        record = None
+        self.cur.execute(command, values)
+        if with_return:
+            record = self.cur.fetchone()
+        self.conn.commit()
+        return record
+    
+    def fetch_all(self, command, values):
+        self.cur.execute(command, values)
+        record = self.cur.fetchall()
+        self.conn.commit()
+        return record
+
+    def close(self):
+        self.cur.close()
+        self.conn.close()
 
 # WILL DROP & RE-CREATE TABLES
 def create_schema(): 

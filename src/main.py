@@ -1,7 +1,8 @@
-from flask import Flask, request, redirect, jsonify, send_file, session
+from flask import Flask, request, redirect, jsonify, send_file, session, abort
 from common.env import read_env_vars
-from model.cup import create_cup_entry, list_cups
+from model.cup import Cup, create_cup_entry, list_cups
 from model.users import list_application_users
+from integrations.db import Database
 
 import os
 import json
@@ -26,6 +27,14 @@ app.config['AWS_COGNITO_USER_POOL_CLIENT_SECRET'] = os.environ["AWS_COGNITO_USER
 app.config['AWS_COGNITO_REDIRECT_URL'] = os.environ["AWS_COGNITO_REDIRECT_URL"]
 
 aws_auth = CognitoAuth(app)
+
+@app.errorhandler(500)
+def system_error(e):
+    return "System Error", 500
+
+@app.errorhandler(400)
+def bad_request(e):
+    return "Bad Request", 400
 
 @app.route('/')
 def index():
@@ -58,15 +67,16 @@ def list_users():
     users = list_application_users()
     return jsonify(users)
 
+#Cup Table Endpoints
 @app.route('/api/cup', methods=['POST'])
 def create_cup():
-    response = None
-    try:
-        response = create_cup_entry(**request.json)
-        response = jsonify(response)
-    except:
-        response = "Bad request", 400
-    return response
+    gentsCup = Cup(**request.json)
+    if not gentsCup.isValidForInsert():
+        abort(400)
+    db = Database()
+    response = create_cup_entry(gentsCup, db)
+    db.close()
+    return jsonify(gentsCup)
 
 
 @app.route('/api/cups', methods=['GET'])

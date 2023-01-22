@@ -1,12 +1,14 @@
-DROP TABLE IF EXISTS cup;
-DROP TABLE IF EXISTS player;
-DROP TABLE IF EXISTS cupTeam;
-DROP TABLE IF EXISTS cupTeamMember;
-DROP TABLE IF EXISTS cupMatch;
+DROP TABLE IF EXISTS cup CASCADE;
+DROP TABLE IF EXISTS player CASCADE;
+DROP TABLE IF EXISTS cupTeam CASCADE;
+DROP TABLE IF EXISTS cupTeamMember CASCADE;
+DROP TABLE IF EXISTS cupMatch CASCADE;
 
 CREATE TABLE cup (
     cupId serial PRIMARY KEY,
-    year text
+    year text,
+    description text,
+    location text
 );
 
 CREATE TABLE cupTeam(

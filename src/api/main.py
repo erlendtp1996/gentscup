@@ -4,7 +4,6 @@ from model.cup import Cup, create_cup_entry, list_cups, get_single_cup
 from model.cupTeam import CupTeam, create_cup_team_entry, update_cup_team_members, valid_num_of_captains, CupTeamMember, put_cup_team_members
 from model.users import list_application_users
 
-
 import os
 import json
 
@@ -13,6 +12,7 @@ from flask_cognito_lib.decorators import (
     auth_required,
     cognito_login,
     cognito_login_callback,
+    cognito_logout
 )
 
 def read_env_vars():
@@ -34,6 +34,9 @@ app.config['AWS_COGNITO_USER_POOL_ID'] = os.environ["AWS_COGNITO_USER_POOL_ID"]
 app.config['AWS_COGNITO_USER_POOL_CLIENT_ID'] = os.environ["AWS_COGNITO_USER_POOL_CLIENT_ID"]
 app.config['AWS_COGNITO_USER_POOL_CLIENT_SECRET'] = os.environ["AWS_COGNITO_USER_POOL_CLIENT_SECRET"]
 app.config['AWS_COGNITO_REDIRECT_URL'] = os.environ["AWS_COGNITO_REDIRECT_URL"]
+app.config['AWS_COGNITO_LOGOUT_URL'] = os.environ["AWS_COGNITO_LOGOUT_URL"]
+#FOR TESTING
+app.config['AWS_COGNITO_EXPIRATION_LEEWAY'] = 50
 
 aws_auth = CognitoAuth(app)
 
@@ -69,6 +72,14 @@ def postlogin():
 def me():
     claims = session["claims"]
     return jsonify({'claims': claims})
+
+@app.route("/api/logout")
+@cognito_logout
+def logout():
+    # Logout of the Cognito User pool and delete the cookies that were set
+    # on login.
+    # No logic is required here as it simply redirects to Cognito.
+    pass
 
 @app.route('/api/users', methods=["GET"])
 @auth_required()

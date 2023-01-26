@@ -14,6 +14,8 @@ function App() {
   const [claims, setClaims] = useState(false)
   const [groups, setGroups] = useState([])
   const [signedIn , setSignedIn] = useState(false)
+  const [selectedCup, setSelectedCup] = useState({})
+  const [userList, setUserList] = useState([])
 
   //fetches the user claims
   function getClaims() {
@@ -33,21 +35,36 @@ function App() {
       });
   }
 
+  function getUsers() {
+    fetch("/api/users", {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    }).then((response) => response.json())
+      .then((data) => {
+        console.log(data)
+      })
+      .catch((error) => {
+        //need to catch this & if 401 then setSignedIn(false)
+      });
+  }
+
   //if no user claims in application state & we have access token, then load claims
   if (!claims) {
     getClaims();
+  }
+
+  if (userList.length == 0) {
+    getUsers();
   }
 
   return (
     <div className="App">
       <Container>
         <GentsCupHeader claims={claims} />
-        <Row>
-          <CupDetails />
-        </Row>
-        { groups && groups.includes("commissioner") && <Row><CommissionerDashboard claims={claims}/></Row>}
-        { groups && groups.includes("captain") && <Row><CaptainDashboard claims={claims}/></Row>}
-        { groups && groups.includes("player") && <Row><PlayerDashboard claims={claims}/></Row>}
+        <CupDetails updateSelectedCup={(cup) => setSelectedCup(cup)} />
+        { groups && groups.includes("commissioner") && <Row><CommissionerDashboard claims={claims} cup={selectedCup}/></Row>}
       </Container>
     </div>
   );

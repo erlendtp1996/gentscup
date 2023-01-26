@@ -4,7 +4,7 @@ import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Container from 'react-bootstrap/Container';
 
-export default function CupDetails() {
+export default function CupDetails({ updateSelectedCup }) {
   const [selectedCup, setSelectedCup] = useState({})
   const [cupComponentList, setCupComponentList] = useState([])
   const [cups, setCups] = useState([])
@@ -36,13 +36,16 @@ export default function CupDetails() {
   }
 
   const onChangeCup = (data) => {
-    console.log(cups)
+    console.log(updateSelectedCup)
     let selectedCupObject = cups.filter(obj => obj.id == data.nativeEvent.target.value)[0]
-    console.log(selectedCupObject)
     setSelectedCup(selectedCupObject);
+    console.log("From Cup Details", selectedCupObject)
+    updateSelectedCup(selectedCupObject);
   }
 
-  listCups()
+  if (cupComponentList.length == 0) {
+    listCups()
+  }
 
   return (
     <Container>
@@ -53,8 +56,7 @@ export default function CupDetails() {
           </Form.Select>
         </Col>
         <Col>
-          <div>Id: {selectedCup.id}</div>
-          <div>Year: {selectedCup.year}</div>
+          Cup details go here
         </Col>
       </Row>
     </Container>

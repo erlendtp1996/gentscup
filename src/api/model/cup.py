@@ -7,7 +7,6 @@ class Cup:
     location: str = ""
     id: int = 0
     
-
     def isValidForInsert(self):
         return (self.year is not None and
             self.description is not None and

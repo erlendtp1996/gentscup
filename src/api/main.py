@@ -1,9 +1,9 @@
 from flask import Flask, request, redirect, jsonify, send_file, session, abort
-from common.env import read_env_vars
+from integrations import Database
 from model.cup import Cup, create_cup_entry, list_cups, get_single_cup
-from model.cupTeam import CupTeam, create_cup_team_entry
+from model.cupTeam import CupTeam, create_cup_team_entry, update_cup_team_members, valid_num_of_captains, CupTeamMember, put_cup_team_members
 from model.users import list_application_users
-from integrations.db import Database
+
 
 import os
 import json
@@ -15,8 +15,16 @@ from flask_cognito_lib.decorators import (
     cognito_login_callback,
 )
 
-read_env_vars()
+def read_env_vars():
+    File_object = open(".env", "r")
+    lines = File_object.readlines()
+    for line in lines:
+        var = line.split("=")
+        os.environ[var[0]] = var[1].strip()
+    File_object.close()
 
+
+read_env_vars()
 app = Flask(__name__, static_folder='./web/gentscup-spa/build', static_url_path='/')
 app.secret_key = "98348934898934894893"
 
@@ -37,6 +45,7 @@ def system_error(e):
 def bad_request(e):
     return "Bad Request", 400
 
+#------------------------------------------------------------------------------------
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
@@ -55,7 +64,6 @@ def postlogin():
         return redirect(os.environ["REACT_HOST_URL"])
     return redirect(url_for("index"))
 
-#Authenticated Endpoints
 @app.route("/api/me", methods=["GET"])
 @auth_required()
 def me():
@@ -68,12 +76,9 @@ def list_users():
     users = list_application_users()
     return jsonify(users)
 
-
-
-
-
+#------------------------------------------------------------------------------------
 #Cup Table Endpoints
-@app.route('/api/cup', methods=['POST'])
+@app.route('/api/cups', methods=['POST'])
 def create_cup():
     gentsCup = Cup(**request.json)
     if not gentsCup.isValidForInsert():
@@ -83,7 +88,7 @@ def create_cup():
     db.close()
     return jsonify(gentsCup)
 
-@app.route('/api/cup/<cupId>', methods=['GET'])
+@app.route('/api/cups/<cupId>', methods=['GET'])
 def get_cup(cupId):
     gentsCup = Cup(id=cupId)
     db = Database()
@@ -95,11 +100,9 @@ def get_cup(cupId):
 def get_cups():
     return jsonify(list_cups(Database()))
 
-
-
-
+#------------------------------------------------------------------------------------
 #Cup Team
-@app.route('/api/cup/<cupId>/cupTeam', methods=['POST'])
+@app.route('/api/cups/<cupId>/cupTeams', methods=['POST'])
 def create_cup_team(cupId):
     gentsCupTeam = CupTeam(cupId=cupId, **request.json)
     if not gentsCupTeam.isValidForInsert():
@@ -109,3 +112,47 @@ def create_cup_team(cupId):
     db.close()
     return jsonify(gentsCupTeam)
 
+
+# UNDER DEV
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+@app.route('/api/cups/<cupId>/cupTeams/<cupTeamId>/teamMembers', methods=['PUT'])
+def update_team_member(cupId, cupTeamId):
+    
+    #Up front validations
+    if not type(request.json) == 'list' and len(request.json) < 1:
+        abort(400)
+
+    cupTeamMemberList = []
+    for item in request.json:
+        if 'cupTeamId' in item:
+            cupTeamMemberList.append(CupTeamMember(**item))
+        else:
+            cupTeamMemberList.append(CupTeamMember(**item, cupTeamId=cupTeamId))
+
+    if not valid_num_of_captains(cupTeamMemberList):
+        abort(400)
+
+    # TODO: validate total bullet count <= total team bullets
+
+    db = Database()
+    cupTeamMemberList = put_cup_team_members(cupTeamMemberList, db)
+    db.close()
+
+    return jsonify(cupTeamMemberList)
+
+@app.route('/api/cups/<cupId>/cupTeams/<cupTeamId>/teamMembers/test', methods=['GET'])
+def get_team_members(cupId, cupTeamId):
+    """
+    cupTeamMemberId serial PRIMARY KEY,
+    userName text,
+    userEmail text,
+    cupTeamId integer REFERENCES cupTeam,
+    individualNumberOfBullets integer,
+    isCaptain boolean
+    """
+    print(cupTeamId)
+    db = Database()
+    records = db.fetch_all("SELECT cupTeamMemberId, userName, userEmail, cupTeamId, individualNumberOfBullets, isCaptain FROM cupTeamMember WHERE cupTeamId=%s;", ((cupTeamId)))
+    print(records)
+    db.close()
+    return jsonify(records)

@@ -1,4 +1,5 @@
 import psycopg2
+import psycopg2.extras
 import os
 
 class Database:
@@ -29,13 +30,47 @@ class Database:
         self.conn.commit()
         return record
 
+    """
+    TODO: Document here:
+
+        args = [(1,2), (3,4), (5,6)]
+        args_str = ','.join(cursor.mogrify("%s", (x, )) for x in args)
+        cursor.execute("INSERT INTO t (a, b) VALUES "+args_str)
+    """
+    def insert_many(self, command, values, mapString, endingString=";"):
+        args_str = ','.join(self.cur.mogrify(mapString, x).decode('utf-8') for x in values)
+        self.cur.execute(command + args_str + endingString)
+        records = self.cur.fetchall()
+        self.conn.commit()
+        return records
+
+
+    """
+    TODO: Document the following: 
+
+    c = db.cursor()
+    update_query = UPDATE my_table AS t 
+                    SET name = e.name 
+                    FROM (VALUES %s) AS e(name, id) 
+                    WHERE e.id = t.id;
+
+    psycopg2.extras.execute_values (
+        c, update_query, new_values, template=None, page_size=100
+    )
+
+    """
+    def update_many(self, command, values, template=None, page_size=100, fetch=False):
+        records = psycopg2.extras.execute_values (self.cur, command, values, template, page_size, fetch)
+        self.conn.commit()
+        return records
+
     def close(self):
         self.cur.close()
         self.conn.close()
 
 # WILL DROP & RE-CREATE TABLES
 def create_schema(): 
-    File_object = open("src/integrations/create_schema.txt", "r")
+    File_object = open("src/api/integrations/create_schema.txt", "r")
     operation = File_object.read()
     File_object.close()
     conn = psycopg2.connect(dbname=os.environ["DB_NAME"], user=os.environ["DB_USER"], password=os.environ["DB_PASSWORD"], host=os.environ["DB_HOST"])
@@ -45,34 +80,3 @@ def create_schema():
     cur.close()
     conn.close()
     print("Done")
-
-"""
-
-FOR FUTURE REFERECE - NEED TO CLEAN UP
-
-def get_users():
-    # Connect to an existing database
-    conn = psycopg2.connect(dbname=os.environ["DB_NAME"], user=os.environ["DB_USER"], password=os.environ["DB_PASSWORD"], host=os.environ["DB_HOST"])
-
-    # Open a cursor to perform database operations
-    cur = conn.cursor()
-
-    # Execute a command: this creates a new table
-    #cur.execute("CREATE TABLE player (id serial PRIMARY KEY, name text, handicap integer, personal_info text, role text);")
-
-    # Pass data to fill a query placeholders and let Psycopg perform
-    # the correct conversion (no more SQL injections!)
-    # cur.execute("INSERT INTO player (name, handicap, personal_info, role) VALUES (%s, %s, %s, %s)", ("Thomas Erlendson", 20, "A player in the cup tournament", "Player"))
-
-    # Query the database and obtain data as Python objects
-    cur.execute("SELECT * FROM player;")
-    player = cur.fetchone()
-
-    # Make the changes to the database persistent
-    conn.commit()
-
-    # Close communication with the database
-    cur.close()
-    conn.close()
-    return player
-"""

@@ -1,7 +1,7 @@
 from flask import Flask, request, redirect, jsonify, send_file, session, abort
 from integrations import Database
 from model.cup import Cup, create_cup_entry, list_cups, get_single_cup
-from model.cupTeam import CupTeam, create_cup_team_entry, update_cup_team_members, valid_num_of_captains, CupTeamMember, put_cup_team_members
+from model.cupTeam import CupTeam, create_cup_team_entry, update_cup_team_members, valid_num_of_captains, CupTeamMember, put_cup_team_members, list_teams_for_cup
 from model.users import list_application_users
 
 import os
@@ -109,7 +109,10 @@ def get_cup(cupId):
 
 @app.route('/api/cups', methods=['GET'])
 def get_cups():
-    return jsonify(list_cups(Database()))
+    db = Database()
+    cups = list_cups(db)
+    db.close()
+    return jsonify(cups)
 
 #------------------------------------------------------------------------------------
 #Cup Team
@@ -123,6 +126,13 @@ def create_cup_team(cupId):
     db.close()
     return jsonify(gentsCupTeam)
 
+@app.route('/api/cups/<cupId>/cupTeams', methods=['GET'])
+def list_cup_teams(cupId):
+    gentsCup = Cup(id=cupId)
+    db = Database()
+    teams = list_teams_for_cup(gentsCup, db)
+    db.close()
+    return jsonify(teams)
 
 # UNDER DEV
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -150,20 +160,3 @@ def update_team_member(cupId, cupTeamId):
     db.close()
 
     return jsonify(cupTeamMemberList)
-
-@app.route('/api/cups/<cupId>/cupTeams/<cupTeamId>/teamMembers/test', methods=['GET'])
-def get_team_members(cupId, cupTeamId):
-    """
-    cupTeamMemberId serial PRIMARY KEY,
-    userName text,
-    userEmail text,
-    cupTeamId integer REFERENCES cupTeam,
-    individualNumberOfBullets integer,
-    isCaptain boolean
-    """
-    print(cupTeamId)
-    db = Database()
-    records = db.fetch_all("SELECT cupTeamMemberId, userName, userEmail, cupTeamId, individualNumberOfBullets, isCaptain FROM cupTeamMember WHERE cupTeamId=%s;", ((cupTeamId)))
-    print(records)
-    db.close()
-    return jsonify(records)

@@ -13,7 +13,7 @@ export default function GentsCupHeader({ claims }) {
   const isSignedIn = (claims || false);
 
   return (
-    <Navbar>
+    <Navbar bg="dark" variant="dark">
       <Container>
         <Navbar.Brand href="#home">
           Gents Cups

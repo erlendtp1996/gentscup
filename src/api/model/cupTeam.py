@@ -47,6 +47,13 @@ def valid_num_of_captains(cupTeamMemberList):
 def map_cup_team_member(record):
     return CupTeamMember(cupTeamMemberId=record[0], userName=record[1], userEmail=record[2], cupTeamId=record[3], individualNumberOfBullets=record[4], isCaptain=record[5])
 
+def map_cup_team_member_with_split(record):
+    return map_cup_team_member(record.split("*&*"))
+
+def map_cup_teams(record):
+    cupTeamMembers = list(map(map_cup_team_member_with_split, record[6]))
+    return CupTeam(cupTeamId=record[0], cupId=record[1], name=record[2], captainUser=record[3], captainEmail=record[4], teamNumberOfBullets=record[5], cupTeamMembers=cupTeamMembers)
+
 """
 BELOW ARE TEAM OPERATIONS
 """
@@ -112,5 +119,21 @@ def update_cup_team_members(updateValues, Database):
     records = Database.update_many(command=command, values=updateValues, fetch=True)    
     return list(map(map_cup_team_member, records))
 
+def list_teams_for_cup(Cup, Database):
+    agg_command = """
+        SELECT team.cupTeamId, team.cupId, team.name, team.captainUser, team.captainEmail, team.teamNumberOfBullets, teamMembers.players
+        FROM cupTeam team
+        JOIN (
+            SELECT teamMember.cupTeamId as cupTeamId, array_agg(teamMember.cupTeamMemberId || '*&*' || teamMember.userName || '*&*' || teamMember.userEmail || '*&*' || teamMember.cupTeamId || '*&*' || teamMember.individualNumberOfBullets  || '*&*' || teamMember.isCaptain) as players
+            FROM cupTeamMember teamMember
+            JOIN cupTeam team ON team.cupTeamId = teamMember.cupTeamId
+            GROUP BY teamMember.cupTeamId
+        ) teamMembers USING (cupTeamId)
+        WHERE team.cupId = %s;
+    """
+
+    records = Database.fetch_all(agg_command, (Cup.id))
+    return list(map(map_cup_teams, records))
+    
     
 

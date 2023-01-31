@@ -13,9 +13,11 @@ export default function GentsCupHeader({ claims }) {
   const isSignedIn = (claims || false);
 
   return (
-    <Navbar>
+    <Navbar bg="dark" variant="dark">
       <Container>
-        <Navbar.Brand href="#home">Gents Cups</Navbar.Brand>
+        <Navbar.Brand href="#home">
+          Gents Cups
+        </Navbar.Brand>
         <Navbar.Toggle />
         <Navbar.Collapse className="justify-content-end">
           { isSignedIn && <Navbar.Text> Signed in as: {claims.username} </Navbar.Text>}

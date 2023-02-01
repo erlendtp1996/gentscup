@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import ReactDataGrid from '@inovua/reactdatagrid-community'
 import Container from 'react-bootstrap/esm/Container'
 import Row from 'react-bootstrap/Row';
@@ -6,8 +6,7 @@ import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import Card from 'react-bootstrap/Card'
-
-const columns = [{ name: 'userName', header: 'Player' }, { name: 'individualNumberOfBullets', header: '# of Bullets', type: 'number', editable: true }]
+import { BiTrash } from "react-icons/bi";
 
 export default function Team({ team, playerList }) {
     const [teamData, setTeamData] = useState(team);
@@ -24,11 +23,14 @@ export default function Team({ team, playerList }) {
             "userName": newPlayer.username
         }]));
         setNewIndividualNumberOfBullets(0);
-        setNewPlayer("")
         //ReactDOM.findDOMNode(this.messageForm).reset();
     }
     const handleSaveTeam = () => {
         // TODO ADD NEW PLAYER TO TEAM
+    }
+
+    const handleDeletePlayer = () => {
+
     }
 
     /*
@@ -40,6 +42,23 @@ export default function Team({ team, playerList }) {
         onEditComplete={onEditComplete}
     }, [teamMemberData])
     */
+
+    const columns = [{
+        name: 'userName',
+        header: 'Player'
+    },
+    {
+        name: 'individualNumberOfBullets',
+        header: '# of Bullets',
+        type: 'number', editable: true
+    },
+    {
+        key: "action",
+        name: "",
+        render: ({ data }) => {
+            return data.isCaptain == 'true' ? <span></span> : <span style={{ 'display': 'flex', 'justifyContent': 'center', 'cursor': 'pointer' }}><BiTrash id={`${data.cupTeamId}-remove-${data.cupTeamMemberId}`} onClick={(e) => setTeamMembers(teamMembers.filter(p => p.cupTeamMemberId != e.target.id.split('-')[2])) }/></span>
+        }
+    }]
 
     useEffect(() => {
         setTeamData(team)
@@ -60,10 +79,10 @@ export default function Team({ team, playerList }) {
     return (
         <Card bg="light" className="mb-2">
             <Card.Body>
-            <Card.Header>
-            <Card.Title>{teamData.name}</Card.Title>
-                <Card.Subtitle className="mb-2 text-muted">Captain: {teamData.captainUser}</Card.Subtitle>
-            </Card.Header>
+                <Card.Header>
+                    <Card.Title>{teamData.name}</Card.Title>
+                    <Card.Subtitle className="mb-2 text-muted">Captain: {teamData.captainUser}</Card.Subtitle>
+                </Card.Header>
                 <Row>
                     <Col>
                         <Form.Group className="mb-3" controlId="formPlayer">
@@ -82,7 +101,7 @@ export default function Team({ team, playerList }) {
                             <Form.Control type="text" placeholder="# Bullets" onChange={(e) => setNewIndividualNumberOfBullets(e.target.value)} />
                         </Form.Group>
                     </Col>
-                    <Col style={{ 'display': 'flex', 'alignItems': 'center', 'justifyContent': 'end'}}>
+                    <Col style={{ 'display': 'flex', 'alignItems': 'center', 'justifyContent': 'end' }}>
                         <Button variant="primary" onClick={handleAddNewPlayer} >
                             Add Player
                         </Button>

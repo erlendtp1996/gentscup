@@ -15,15 +15,18 @@ export default function Team({ team, playerList }) {
     const [playerComponentDropdownValues, setPlayerComponentDropdownValues] = useState([])
 
     const handleAddNewPlayer = () => {
+        console.log(newPlayer, playerList)
+        const selectedPlayer = playerList.filter(player => player.email == newPlayer)[0];
+        console.log(selectedPlayer.username)
+
         setTeamMembers(teamMembers.concat([{
-            "cupTeamId": team.cupTeamId,
+            "cupTeamId": teamData.cupTeamId,
             "individualNumberOfBullets": newIndividualNumberOfBullets,
-            "userEmail": newPlayer.email,
-            "userName": newPlayer.username
+            "userEmail": selectedPlayer.email,
+            "userName": selectedPlayer.username
         }]));
-        setNewIndividualNumberOfBullets(0);
-        //TO DO - reset the dropdown component
-        //ReactDOM.findDOMNode(this.messageForm).reset();
+        setNewIndividualNumberOfBullets("");
+        setNewPlayer("0")
     }
     const handleSaveTeam = () => {
         // TODO ADD NEW PLAYER TO TEAM
@@ -49,7 +52,7 @@ export default function Team({ team, playerList }) {
         key: "action",
         name: "",
         render: ({ data }) => {
-            return data.isCaptain == 'true' ? <span></span> : <span style={{ 'display': 'flex', 'justifyContent': 'center', 'cursor': 'pointer' }}><BiTrash id={`${data.cupTeamId}-remove-${data.cupTeamMemberId}`} onClick={(e) => setTeamMembers(teamMembers.filter(p => p.cupTeamMemberId != e.target.id.split('-')[2]))} /></span>
+            return data.isCaptain == 'true' ? <span></span> : <span style={{ 'display': 'flex', 'justifyContent': 'center', 'cursor': 'pointer' }}><BiTrash id={`${data.cupTeamId}-remove-${data.userEmail}`} onClick={(e) => setTeamMembers(teamMembers.filter(p => p.userEmail != e.target.id.split('-')[2]))} /></span>
         }
     }]
 
@@ -80,9 +83,7 @@ export default function Team({ team, playerList }) {
                     <Col>
                         <Form.Group className="mb-3" controlId="formPlayer">
                             <Form.Label>Player</Form.Label>
-                            <Form.Select aria-label="Select Player" onChange={(e) => {
-                                setNewPlayer(playerList.filter(c => c.email == e.target.value)[0])
-                            }}>
+                            <Form.Select value={newPlayer} aria-label="Select Player" onChange={(e) => { setNewPlayer(e.target.value) }}>
                                 {playerComponentDropdownValues}
                             </Form.Select>
                         </Form.Group>
@@ -90,7 +91,7 @@ export default function Team({ team, playerList }) {
                     <Col>
                         <Form.Group className="mb-3" controlId="formIndividualNumberOfBullets">
                             <Form.Label># Bullets</Form.Label>
-                            <Form.Control type="text" placeholder="# Bullets" onChange={(e) => setNewIndividualNumberOfBullets(e.target.value)} />
+                            <Form.Control value={newIndividualNumberOfBullets} type="text" placeholder="# Bullets" onChange={(e) => setNewIndividualNumberOfBullets(e.target.value)} />
                         </Form.Group>
                     </Col>
                     <Col style={{ 'display': 'flex', 'alignItems': 'center', 'justifyContent': 'end' }}>

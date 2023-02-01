@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import ReactDataGrid from '@inovua/reactdatagrid-community'
-import Container from 'react-bootstrap/esm/Container'
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
@@ -23,25 +22,19 @@ export default function Team({ team, playerList }) {
             "userName": newPlayer.username
         }]));
         setNewIndividualNumberOfBullets(0);
+        //TO DO - reset the dropdown component
         //ReactDOM.findDOMNode(this.messageForm).reset();
     }
     const handleSaveTeam = () => {
         // TODO ADD NEW PLAYER TO TEAM
     }
 
-    const handleDeletePlayer = () => {
-
-    }
-
-    /*
-    const onEditComplete = useCallback(({ value, columnId, rowId }) => {
-        const data = [...teamData.cupTeamMembers];
-        data[rowId] = Object.assign({}, data[rowId], { [columnId]: value })
-
-        setTeamMemberData(data);
-        onEditComplete={onEditComplete}
-    }, [teamMemberData])
-    */
+    
+    const onEditComplete = useCallback(({ value, columnId, rowIndex, data }) => {
+        const newMembers = [...teamMembers]
+        newMembers[rowIndex][columnId] = value
+        setTeamMembers(newMembers);
+    }, [teamMembers])
 
     const columns = [{
         name: 'userName',
@@ -56,7 +49,7 @@ export default function Team({ team, playerList }) {
         key: "action",
         name: "",
         render: ({ data }) => {
-            return data.isCaptain == 'true' ? <span></span> : <span style={{ 'display': 'flex', 'justifyContent': 'center', 'cursor': 'pointer' }}><BiTrash id={`${data.cupTeamId}-remove-${data.cupTeamMemberId}`} onClick={(e) => setTeamMembers(teamMembers.filter(p => p.cupTeamMemberId != e.target.id.split('-')[2])) }/></span>
+            return data.isCaptain == 'true' ? <span></span> : <span style={{ 'display': 'flex', 'justifyContent': 'center', 'cursor': 'pointer' }}><BiTrash id={`${data.cupTeamId}-remove-${data.cupTeamMemberId}`} onClick={(e) => setTeamMembers(teamMembers.filter(p => p.cupTeamMemberId != e.target.id.split('-')[2]))} /></span>
         }
     }]
 
@@ -88,7 +81,6 @@ export default function Team({ team, playerList }) {
                         <Form.Group className="mb-3" controlId="formPlayer">
                             <Form.Label>Player</Form.Label>
                             <Form.Select aria-label="Select Player" onChange={(e) => {
-                                console.log(playerList, e.target.value)
                                 setNewPlayer(playerList.filter(c => c.email == e.target.value)[0])
                             }}>
                                 {playerComponentDropdownValues}
@@ -111,7 +103,8 @@ export default function Team({ team, playerList }) {
             <ReactDataGrid
                 idProperty="id"
                 columns={columns}
-                dataSource={teamMembers} />
+                dataSource={teamMembers}
+                onEditComplete={onEditComplete} />
             <Card.Footer>
                 <Row>
                     <Col>

@@ -9,6 +9,11 @@ class Database:
 
     def query(self, query):
         self.cur.execute(query)
+        self.conn.commit()
+
+    def execute(self, command, values):
+        self.cur.execute(command, values)
+        self.conn.commit()
 
     def insert(self, command, values=None, with_return=False):
         record = None

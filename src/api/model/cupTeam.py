@@ -17,6 +17,11 @@ class CupTeam:
     teamNumberOfBullets: int
     cupTeamId: int = 0
     cupTeamMembers: list = field(default_factory=list)
+
+    def __post_init__(self):
+        self.cupId = int(self.cupId)
+        self.teamNumberOfBullets = int(self.teamNumberOfBullets)
+        self.cupTeamId = int(self.cupTeamId)
     
     def isValidForInsert(self):
         return (self.cupId is not None and
@@ -33,6 +38,17 @@ class CupTeamMember:
     individualNumberOfBullets: int = 0
     isCaptain: bool = False
     cupTeamMemberId: int = 0
+
+    def __post_init__(self):
+        self.cupTeamMemberId = int(self.cupTeamMemberId)
+        self.individualNumberOfBullets = int(self.individualNumberOfBullets)
+        self.cupTeamId = int(self.cupTeamId)
+        if type(self.isCaptain) == bool:
+            pass
+        elif type(self.isCaptain) == str:
+            self.isCaptain = True if (self.isCaptain.lower() == 'true') else False
+        else: 
+            self.isCaptain = False
     
     def isValidForInsert(self):
         return (self.userName is not None and
@@ -41,8 +57,8 @@ class CupTeamMember:
 
 
 def valid_num_of_captains(cupTeamMemberList):
-    captains = filter(lambda x: x.isCaptain, cupTeamMemberList)
-    return len(list(captains)) == 1
+    captains = filter(lambda x: x.isCaptain == True, cupTeamMemberList)
+    return (len(list(captains)) == 1)
 
 def map_cup_team_member(record):
     return CupTeamMember(cupTeamMemberId=record[0], userName=record[1], userEmail=record[2], cupTeamId=record[3], individualNumberOfBullets=record[4], isCaptain=record[5])
@@ -79,12 +95,13 @@ def put_cup_team_members(cupTeamMemberList, Database):
         else:
             insertValues.append((member.userName, member.userEmail, member.cupTeamId, member.individualNumberOfBullets, member.isCaptain,))
 
+    if len(updateValues)>0:
+        updateValues = update_cup_team_members(updateValues, Database)
+        remove_team_members(updateValues, Database)
+
     if len(insertValues)>0:
         insertValues = insert_cup_team_members(insertValues, Database)
     
-    if len(updateValues)>0:
-        updateValues = update_cup_team_members(updateValues, Database)
-
     insertValues.extend(updateValues)
     insertValues.sort(key=lambda x: x.cupTeamMemberId)
 
@@ -118,6 +135,11 @@ def update_cup_team_members(updateValues, Database):
     
     records = Database.update_many(command=command, values=updateValues, fetch=True)    
     return list(map(map_cup_team_member, records))
+
+def remove_team_members(updateValues, Database):
+    values = map(lambda x: x.cupTeamMemberId, updateValues)
+    command = "DELETE FROM cupTeamMember WHERE NOT cupTeamMemberId IN %s"
+    Database.execute(command, (tuple(values),))
 
 def list_teams_for_cup(Cup, Database):
     agg_command = """

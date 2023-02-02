@@ -7,7 +7,7 @@ import Button from 'react-bootstrap/Button'
 import Card from 'react-bootstrap/Card'
 import { BiTrash } from "react-icons/bi";
 
-export default function Team({ team, playerList }) {
+export default function Team({ team, playerList, updateTeamMembers }) {
     const [teamData, setTeamData] = useState(team);
     const [teamMembers, setTeamMembers] = useState(team.cupTeamMembers)
     const [newPlayer, setNewPlayer] = useState("");
@@ -15,9 +15,7 @@ export default function Team({ team, playerList }) {
     const [playerComponentDropdownValues, setPlayerComponentDropdownValues] = useState([])
 
     const handleAddNewPlayer = () => {
-        console.log(newPlayer, playerList)
         const selectedPlayer = playerList.filter(player => player.email == newPlayer)[0];
-        console.log(selectedPlayer.username)
 
         setTeamMembers(teamMembers.concat([{
             "cupTeamId": teamData.cupTeamId,
@@ -29,10 +27,16 @@ export default function Team({ team, playerList }) {
         setNewPlayer("0")
     }
     const handleSaveTeam = () => {
-        // TODO ADD NEW PLAYER TO TEAM
+        updateTeamMembers({ "teamMembers": teamMembers, "cupTeamId": team.cupTeamId})
+            .then((response) => response.json())
+            .then((data) => {
+                console.log("updated team members!", data);
+            })
+            .catch((error) => {
+                console.log("there was an error", error)
+            });
     }
 
-    
     const onEditComplete = useCallback(({ value, columnId, rowIndex, data }) => {
         const newMembers = [...teamMembers]
         newMembers[rowIndex][columnId] = value
@@ -52,7 +56,7 @@ export default function Team({ team, playerList }) {
         key: "action",
         name: "",
         render: ({ data }) => {
-            return data.isCaptain == 'true' ? <span></span> : <span style={{ 'display': 'flex', 'justifyContent': 'center', 'cursor': 'pointer' }}><BiTrash id={`${data.cupTeamId}-remove-${data.userEmail}`} onClick={(e) => setTeamMembers(teamMembers.filter(p => p.userEmail != e.target.id.split('-')[2]))} /></span>
+            return (data.isCaptain == true || (data.isCaptain && data.isCaptain.toLowerCase() == 'true')) ? <span></span> : <span style={{ 'display': 'flex', 'justifyContent': 'center', 'cursor': 'pointer' }}><BiTrash id={`${data.cupTeamId}-remove-${data.userEmail}`} onClick={(e) => setTeamMembers(teamMembers.filter(p => p.userEmail != e.target.id.split('-')[2]))} /></span>
         }
     }]
 

@@ -65,6 +65,16 @@ export default function TeamDashboard({ selectedCup, playerList, captainList }) 
             });
     }
 
+    function updateTeamMembers({ cupTeamId, teamMembers }) {
+        return fetch(`/api/cups/${selectedCup.id}/cupTeams/${cupTeamId}/teamMembers`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(teamMembers)
+        })
+    }
+
     // selected cup effect
     useEffect(() => {
         if (selectedCup && selectedCup.id) {
@@ -113,7 +123,7 @@ export default function TeamDashboard({ selectedCup, playerList, captainList }) 
             </Row>
 
             <Row xs={1} md={2} className="g-4">
-                {cupTeams.map((team) => <Col key={"parentTeamCol-" + team.cupTeamId.toString()}><Team key={team.cupTeamId.toString()} team={team} playerList={playerList} /></Col>)}
+                {cupTeams.map((team) => <Col key={"parentTeamCol-" + team.cupTeamId.toString()}><Team key={team.cupTeamId.toString()} team={team} playerList={playerList} updateTeamMembers={(obj) => updateTeamMembers(obj)} /></Col>)}
             </Row>
         </Container>
     )

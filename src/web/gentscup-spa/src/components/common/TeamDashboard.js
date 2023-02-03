@@ -7,15 +7,9 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 
-export default function TeamDashboard({ selectedCup, playerList, captainList }) {
+export default function TeamDashboard({ selectedCup, playerList, captainList, claims }) {
     const [cupTeams, setCupTeams] = useState([])
-
-    const captainUserSelectList = [(<option value="0" key="0">Select a Captain</option>)];
-    captainUserSelectList.push(captainList.map((captain) =>
-        <option value={captain.email} key={captain.email}>
-            {captain.username} - {captain.email}
-        </option>
-    ));
+    const [captainUserSelectList, setCaptainUserSelectList] = useState([])
 
     // Team State
     const [showNewTeam, setShowNewTeam] = useState(false);
@@ -38,12 +32,9 @@ export default function TeamDashboard({ selectedCup, playerList, captainList }) 
             .then((data) => {
                 setCupTeams(data)
             })
-            .catch((error) => {
-                //need to catch this & if 401 then setSignedIn(false)
-            });
+            .catch((error) => console.log(error));
     }
 
-    // TODO - need to get the payload from postmand and embed the cupId from the inputted cup property
     function createTeam(callback) {
         fetch(`/api/cups/${selectedCup.id}/cupTeams`, {
             method: 'POST',
@@ -59,10 +50,9 @@ export default function TeamDashboard({ selectedCup, playerList, captainList }) 
         }).then((response) => response.json())
             .then((data) => {
                 callback()
+                getTeams(selectedCup.id)
             })
-            .catch((error) => {
-                //need to catch this & if 401 then setSignedIn(false)
-            });
+            .catch((error) => console.log(error));
     }
 
     function updateTeamMembers({ cupTeamId, teamMembers }) {
@@ -75,21 +65,34 @@ export default function TeamDashboard({ selectedCup, playerList, captainList }) 
         })
     }
 
-    // selected cup effect
+    // effects
     useEffect(() => {
         if (selectedCup && selectedCup.id) {
             getTeams(selectedCup.id)
         }
     }, [selectedCup]);
 
+    useEffect(() => {
+        if (captainList && captainList.length > 0) {
+            const selectList = [(<option value="0" key="0">Select a Captain</option>)];
+            selectList.push(captainList.map((captain) =>
+                <option value={captain.email} key={captain.email}>
+                    {captain.username} - {captain.email}
+                </option>
+            ));
+            setCaptainUserSelectList(selectList)
+        }
+    }, [captainList])
+
     return (
         <Container>
             <Row>
-                <Col>
-                    <Button variant="primary" onClick={handleShowNewTeam} disabled={selectedCup && (selectedCup.id == 'undefined' || selectedCup.id == null)}>
-                        Add new Team
-                    </Button>
-
+                <Col style={{ 'display': 'flex', 'justifyContent': 'end' }}>
+                    {claims && claims['cognito:groups'].includes('commissioner') &&
+                        <Button variant="primary" onClick={handleShowNewTeam} disabled={selectedCup && (selectedCup.id == 'undefined' || selectedCup.id == null)}>
+                            Add new Team
+                        </Button>
+                    }
                     <Modal show={showNewTeam} onHide={handleCloseNewTeam}>
                         <Modal.Header closeButton>
                             <Modal.Title>Add new Team</Modal.Title>
@@ -122,7 +125,7 @@ export default function TeamDashboard({ selectedCup, playerList, captainList }) 
                 </Col>
             </Row>
 
-            <Row xs={1} md={2} className="g-4">
+            <Row xs={1} md={2} className="g-4" style={{ 'marginTop': '3%' }}>
                 {cupTeams.map((team) => <Col key={"parentTeamCol-" + team.cupTeamId.toString()}><Team key={team.cupTeamId.toString()} team={team} playerList={playerList} updateTeamMembers={(obj) => updateTeamMembers(obj)} /></Col>)}
             </Row>
         </Container>

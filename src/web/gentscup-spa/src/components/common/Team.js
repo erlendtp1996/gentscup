@@ -6,6 +6,7 @@ import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import Card from 'react-bootstrap/Card'
 import { BiTrash } from "react-icons/bi";
+import Spinner from 'react-bootstrap/Spinner';
 
 export default function Team({ team, playerList, updateTeamMembers }) {
     const [teamData, setTeamData] = useState(team);
@@ -13,6 +14,7 @@ export default function Team({ team, playerList, updateTeamMembers }) {
     const [newPlayer, setNewPlayer] = useState("");
     const [newIndividualNumberOfBullets, setNewIndividualNumberOfBullets] = useState(0);
     const [playerComponentDropdownValues, setPlayerComponentDropdownValues] = useState([])
+    const [displaySaveTeamSpinner, setDisplaySaveTeamSpinner] = useState(false)
 
     const handleAddNewPlayer = () => {
         const selectedPlayer = playerList.filter(player => player.email == newPlayer)[0];
@@ -27,12 +29,15 @@ export default function Team({ team, playerList, updateTeamMembers }) {
         setNewPlayer("0")
     }
     const handleSaveTeam = () => {
-        updateTeamMembers({ "teamMembers": teamMembers, "cupTeamId": team.cupTeamId})
+        setDisplaySaveTeamSpinner(true)
+        updateTeamMembers({ "teamMembers": teamMembers, "cupTeamId": team.cupTeamId })
             .then((response) => response.json())
             .then((data) => {
+                setDisplaySaveTeamSpinner(false)
                 console.log("updated team members!", data);
             })
             .catch((error) => {
+                setDisplaySaveTeamSpinner(false)
                 console.log("there was an error", error)
             });
     }
@@ -81,7 +86,7 @@ export default function Team({ team, playerList, updateTeamMembers }) {
             <Card.Body>
                 <Card.Header>
                     <Card.Title>{teamData.name}</Card.Title>
-                    <Card.Subtitle className="mb-2 text-muted">Captain: {teamData.captainUser}</Card.Subtitle>
+                    <Card.Subtitle className="mb-2 text-muted">Captain: {teamData.captainUser} - {teamData.teamNumberOfBullets} Total Bullets</Card.Subtitle>
                 </Card.Header>
                 <Row>
                     <Col>
@@ -115,9 +120,16 @@ export default function Team({ team, playerList, updateTeamMembers }) {
                     <Col>
                     </Col>
                     <Col style={{ 'display': 'flex', 'justifyContent': 'end' }}>
-                        <Button variant="success" onClick={handleSaveTeam} >
-                            Save Team
-                        </Button>
+                        {displaySaveTeamSpinner &&
+                            <Spinner animation="border" role="status">
+                                <span className="visually-hidden">Loading...</span>
+                            </Spinner>
+                        }
+                        {!displaySaveTeamSpinner &&
+                            <Button variant="success" onClick={handleSaveTeam} >
+                                Save Team
+                            </Button>
+                        }
                     </Col>
                 </Row>
             </Card.Footer>

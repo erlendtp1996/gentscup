@@ -85,7 +85,7 @@ def create_cup_team_entry(CupTeam, Database):
     #Add Captain to team for response
     CupTeam.cupTeamMembers.append(captain)
 
-def put_cup_team_members(cupTeamMemberList, Database):
+def put_cup_team_members(cupTeamId, cupTeamMemberList, Database):
     insertValues = []
     updateValues = []
 
@@ -97,7 +97,7 @@ def put_cup_team_members(cupTeamMemberList, Database):
 
     if len(updateValues)>0:
         updateValues = update_cup_team_members(updateValues, Database)
-        remove_team_members(updateValues, Database)
+        remove_team_members(cupTeamId, updateValues, Database)
 
     if len(insertValues)>0:
         insertValues = insert_cup_team_members(insertValues, Database)
@@ -136,10 +136,10 @@ def update_cup_team_members(updateValues, Database):
     records = Database.update_many(command=command, values=updateValues, fetch=True)    
     return list(map(map_cup_team_member, records))
 
-def remove_team_members(updateValues, Database):
+def remove_team_members(cupTeamId, updateValues, Database):
     values = map(lambda x: x.cupTeamMemberId, updateValues)
-    command = "DELETE FROM cupTeamMember WHERE NOT cupTeamMemberId IN %s"
-    Database.execute(command, (tuple(values),))
+    command = "DELETE FROM cupTeamMember WHERE cupTeamMemberId NOT IN %s AND cupTeamId = %s"
+    Database.execute(command, (tuple(values),(cupTeamId)))
 
 def list_teams_for_cup(Cup, Database):
     agg_command = """

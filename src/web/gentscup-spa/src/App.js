@@ -10,13 +10,10 @@ import Stack from 'react-bootstrap/Stack'
 
 function App() {
   const [claims, setClaims] = useState(false)
-  const [groups, setGroups] = useState([])
-  const [signedIn, setSignedIn] = useState(false)
   const [selectedCup, setSelectedCup] = useState({})
   const [userList, setUserList] = useState([])
   const [captainUserList, setCaptainUserList] = useState([])
-  
-
+  const [isSignedIn, setIsSignedIn] = useState(false)
 
   //fetches the user claims
   function getClaims() {
@@ -27,13 +24,10 @@ function App() {
       }
     }).then((response) => response.json())
       .then((data) => {
+        setIsSignedIn(true)
         setClaims(data.claims);
-        setGroups(data.claims['cognito:groups']);
-        setSignedIn(true);
       })
-      .catch((error) => {
-        //need to catch this & if 401 then setSignedIn(false)
-      });
+      .catch((error) => setIsSignedIn(false));
   }
 
   function getUsers() {
@@ -50,29 +44,40 @@ function App() {
         });
         setCaptainUserList(captains)
       })
-      .catch((error) => {
-        //need to catch this & if 401 then setSignedIn(false)
-      });
+      .catch((error) => console.log(error));
   }
 
-  //selected cup effect
   useEffect(() => {
     getUsers()
     getClaims()
-  }, []); 
+  }, []);
+
+  const getDashboard = () => {
+    return (
+      <Stack gap={5} style={{ 'marginTop': '3%' }}>
+        <Row>
+          <CupDetails updateSelectedCup={(cup) => setSelectedCup(cup)} claims={claims} />
+        </Row>
+        <Row>
+          <TeamDashboard selectedCup={selectedCup} playerList={userList} captainList={captainUserList} claims={claims} />
+        </Row>
+      </Stack>)
+  }
+
+  const getSignInScreen = () => {
+    return (
+      <Row style={{ 'marginTop': '20%' }}>
+        <h3>Please sign in</h3>
+      </Row>
+    )
+  }
 
   return (
     <div className="App">
       <GentsCupHeader claims={claims} />
       <Container>
-        <Stack gap={5} style={{'marginTop': '3%'}}>
-          <Row>
-            <CupDetails updateSelectedCup={(cup) => setSelectedCup(cup)} />
-          </Row>
-          <Row>
-            <TeamDashboard selectedCup={selectedCup} playerList={userList} captainList={captainUserList}/>
-          </Row>
-        </Stack>
+        { isSignedIn && getDashboard() }
+        { !isSignedIn && getSignInScreen() }
       </Container>
     </div >
   );

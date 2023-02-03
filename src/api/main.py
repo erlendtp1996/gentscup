@@ -90,6 +90,7 @@ def list_users():
 #------------------------------------------------------------------------------------
 #Cup Table Endpoints
 @app.route('/api/cups', methods=['POST'])
+@auth_required()
 def create_cup():
     gentsCup = Cup(**request.json)
     if not gentsCup.isValidForInsert():
@@ -100,6 +101,7 @@ def create_cup():
     return jsonify(gentsCup)
 
 @app.route('/api/cups/<cupId>', methods=['GET'])
+@auth_required()
 def get_cup(cupId):
     gentsCup = Cup(id=cupId)
     db = Database()
@@ -108,6 +110,7 @@ def get_cup(cupId):
     return jsonify(gentsCup)
 
 @app.route('/api/cups', methods=['GET'])
+@auth_required()
 def get_cups():
     db = Database()
     cups = list_cups(db)
@@ -117,6 +120,7 @@ def get_cups():
 #------------------------------------------------------------------------------------
 #Cup Team
 @app.route('/api/cups/<cupId>/cupTeams', methods=['POST'])
+@auth_required()
 def create_cup_team(cupId):
     gentsCupTeam = CupTeam(cupId=cupId, **request.json)
     if not gentsCupTeam.isValidForInsert():
@@ -127,6 +131,7 @@ def create_cup_team(cupId):
     return jsonify(gentsCupTeam)
 
 @app.route('/api/cups/<cupId>/cupTeams', methods=['GET'])
+@auth_required()
 def list_cup_teams(cupId):
     gentsCup = Cup(id=cupId)
     db = Database()
@@ -137,6 +142,7 @@ def list_cup_teams(cupId):
 # UNDER DEV
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 @app.route('/api/cups/<cupId>/cupTeams/<cupTeamId>/teamMembers', methods=['PUT'])
+@auth_required()
 def update_team_member(cupId, cupTeamId):
     
     #Up front validations
@@ -156,7 +162,7 @@ def update_team_member(cupId, cupTeamId):
     # TODO: validate total bullet count <= total team bullets
 
     db = Database()
-    cupTeamMemberList = put_cup_team_members(cupTeamMemberList, db)
+    cupTeamMemberList = put_cup_team_members(cupTeamId, cupTeamMemberList, db)
     db.close()
 
     return jsonify(cupTeamMemberList)

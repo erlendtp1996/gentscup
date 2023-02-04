@@ -4,7 +4,7 @@ from unittest.mock import patch
 import requests
 from functools import wraps
 
-sys.path.append('/Users/thomaserlendson/git/gentscup/src/api')
+sys.path.append(os.getcwd() + '/src/api')
 
 #mock authentication decorator
 def mock_authentication(groups=[]):

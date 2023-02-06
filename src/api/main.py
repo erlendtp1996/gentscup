@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, jsonify, send_file, session, abort
+from flask import Flask, request, redirect, jsonify, url_for, session, abort
 from integrations import Database
 from model.cup import Cup, create_cup_entry, list_cups, get_single_cup
 from model.cupTeam import CupTeam, create_cup_team_entry, update_cup_team_members, valid_num_of_captains, CupTeamMember, put_cup_team_members, list_teams_for_cup
